@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VLESS Config Professional Transformer</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h2 { color: var(--primary); margin-bottom: 1.5rem; }
+
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: right;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 1rem;
+        }
+
+        button:hover { background-color: var(--primary-hover); }
+
+        .footer {
+            margin-top: 1.5rem;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        #downloadSection {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0fdf4;
+            border-radius: 10px;
+            border: 1px solid #bbf7d0;
+        }
+
+        .download-btn {
+            background-color: #22c55e;
+            text-decoration: none;
+            display: inline-block;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>تغییر لایه‌ای VLESS</h2>
+    
+    <div class="form-group">
+        <label>انتخاب فایل کانفیگ (txt):</label>
+        <input type="file" id="fileInput" accept=".txt">
+    </div>
+
+    <div class="form-group">
+        <label>آی‌پی تمیز جدید:</label>
+        <input type="text" id="newIp" value="8.6.112.0">
+    </div>
+
+    <div class="form-group">
+        <label>نام جدید کانفیگ:</label>
+        <input type="text" id="newName" placeholder="مثلا: Server-Clean">
+    </div>
+
+    <div class="form-group">
+        <label>پرچم/اموجی:</label>
+        <input type="text" id="flag" value="🇺🇸">
+    </div>
+
+    <button onclick="processFile()">پردازش و آماده‌سازی فایل</button>
+
+    <div id="downloadSection">
+        <p style="color: #166534;">✅ فایل با موفقیت آماده شد!</p>
+        <a id="downloadLink" class="download-btn" href="#">📥 دانلود فایل خروجی</a>
+    </div>
+
+    <div class="footer">
+        فقط کانفیگ‌های دارای <b>type=ws</b> تغییر داده می‌شوند.
+    </div>
+</div>
+
+<script>
+    function processFile() {
+        const fileInput = document.getElementById('fileInput');
+        const newIp = document.getElementById('newIp').value;
+        const newName = document.getElementById('newName').value || "Config";
+        const flag = document.getElementById('flag').value;
+
+        if (fileInput.files.length === 0) {
+            alert("لطفاً ابتدا یک فایل انتخاب کنید.");
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const content = e.target.result;
+            const lines = content.split(/\r?\n/);
+            let modifiedLines = [];
+
+            lines.forEach((line, index) => {
+                let trimmedLine = line.trim();
+                if (trimmedLine.startsWith('vless://') && trimmedLine.includes('type=ws')) {
+                    try {
+                        // استخراج UUID و بخش بعد از آن
+                        let [beforeAt, afterAt] = trimmedLine.split('@');
+                        let [addressPort, rest] = afterAt.split('?');
+                        let [params, remark] = rest.split('#');
+
+                        // اعمال تغییرات: آدرس جدید و پورت 443
+                        let newAddressPort = `${newIp}:443`;
+                        
+                        // ساخت نام جدید (ریموت کردن نام قدیمی)
+                        let updatedRemark = encodeURIComponent(`${newName} ${index + 1} ${flag}`);
+
+                        let newLine = `${beforeAt}@${newAddressPort}?${params}#${updatedRemark}`;
+                        modifiedLines.append ? null : modifiedLines.push(newLine);
+                    } catch (err) {
+                        modifiedLines.push(trimmedLine);
+                    }
+                } else if (trimmedLine !== "") {
+                    modifiedLines.push(trimmedLine);
+                }
+            });
+
+            createDownloadLink(modifiedLines.join('\n'));
+        };
+
+        reader.readAsText(file);
+    }
+
+    function createDownloadLink(data) {
+        const blob = new Blob([data], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.getElementById('downloadLink');
+        const section = document.getElementById('downloadSection');
+
+        link.href = url;
+        link.download = "Modified_Configs.txt";
+        section.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
