@@ -3,205 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VLESS Config Professional Transformer</title>
+    <title>VLESS Config Fixer</title>
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-hover: #4f46e5;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text: #1e293b;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            background: var(--card-bg);
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            width: 90%;
-            max-width: 500px;
-            text-align: center;
-        }
-
-        h2 { color: var(--primary); margin-bottom: 1.5rem; }
-
-        .form-group {
-            margin-bottom: 1rem;
-            text-align: right;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-
-        input[type="text"], input[type="file"] {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            box-sizing: border-box;
-            transition: all 0.3s;
-        }
-
-        input[type="text"]:focus {
-            border-color: var(--primary);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s;
-            margin-top: 1rem;
-        }
-
-        button:hover { background-color: var(--primary-hover); }
-
-        .footer {
-            margin-top: 1.5rem;
-            font-size: 0.8rem;
-            color: #94a3b8;
-        }
-
-        #downloadSection {
-            display: none;
-            margin-top: 20px;
-            padding: 15px;
-            background: #f0fdf4;
-            border-radius: 10px;
-            border: 1px solid #bbf7d0;
-        }
-
-        .download-btn {
-            background-color: #22c55e;
-            text-decoration: none;
-            display: inline-block;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
+        :root { --p: #4f46e5; --bg: #f1f5f9; }
+        body { font-family: tahoma; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
+        h2 { color: var(--p); margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: var(--p); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        button:hover { background: #4338ca; }
+        #status { margin-top: 15px; padding: 10px; display: none; border-radius: 8px; font-size: 14px; }
+        .success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .download-btn { background: #22c55e; text-decoration: none; display: block; color: white; padding: 12px; border-radius: 8px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>تغییر لایه‌ای VLESS</h2>
+<div class="card">
+    <h2>ویرایشگر کانفیگ VLESS</h2>
     
-    <div class="form-group">
-        <label>انتخاب فایل کانفیگ (txt):</label>
-        <input type="file" id="fileInput" accept=".txt">
-    </div>
+    <label>انتخاب فایل (vl.txt):</label>
+    <input type="file" id="fileInput" accept=".txt">
+    
+    <input type="text" id="newIp" placeholder="آی‌پی جدید (مثلا 8.6.112.0)" value="8.6.112.0">
+    <input type="text" id="newName" placeholder="نام دلخواه (مثلا Shatak-New)">
+    <input type="text" id="flag" placeholder="پرچم (🇺🇸)" value="🇺🇸">
 
-    <div class="form-group">
-        <label>آی‌پی تمیز جدید:</label>
-        <input type="text" id="newIp" value="8.6.112.0">
-    </div>
+    <button onclick="processFile()">🚀 پردازش و ساخت فایل جدید</button>
 
-    <div class="form-group">
-        <label>نام جدید کانفیگ:</label>
-        <input type="text" id="newName" placeholder="مثلا: Server-Clean">
-    </div>
-
-    <div class="form-group">
-        <label>پرچم/اموجی:</label>
-        <input type="text" id="flag" value="🇺🇸">
-    </div>
-
-    <button onclick="processFile()">پردازش و آماده‌سازی فایل</button>
-
-    <div id="downloadSection">
-        <p style="color: #166534;">✅ فایل با موفقیت آماده شد!</p>
-        <a id="downloadLink" class="download-btn" href="#">📥 دانلود فایل خروجی</a>
-    </div>
-
-    <div class="footer">
-        فقط کانفیگ‌های دارای <b>type=ws</b> تغییر داده می‌شوند.
-    </div>
+    <div id="status"></div>
+    <div id="dlContainer"></div>
 </div>
 
 <script>
     function processFile() {
         const fileInput = document.getElementById('fileInput');
-        const newIp = document.getElementById('newIp').value;
-        const newName = document.getElementById('newName').value || "Config";
-        const flag = document.getElementById('flag').value;
+        const newIp = document.getElementById('newIp').value.trim();
+        const newName = document.getElementById('newName').value.trim() || "Config";
+        const flag = document.getElementById('flag').value.trim();
+        const status = document.getElementById('status');
+        const dlContainer = document.getElementById('dlContainer');
 
-        if (fileInput.files.length === 0) {
-            alert("لطفاً ابتدا یک فایل انتخاب کنید.");
+        if (!fileInput.files[0]) {
+            alert("لطفاً فایل را انتخاب کنید");
             return;
         }
 
-        const file = fileInput.files[0];
         const reader = new FileReader();
-
         reader.onload = function(e) {
             const content = e.target.result;
             const lines = content.split(/\r?\n/);
-            let modifiedLines = [];
+            let results = [];
+            let count = 0;
 
-            lines.forEach((line, index) => {
-                let trimmedLine = line.trim();
-                if (trimmedLine.startsWith('vless://') && trimmedLine.includes('type=ws')) {
+            lines.forEach((line) => {
+                if (line.includes('vless://') && line.includes('type=ws')) {
                     try {
-                        // استخراج UUID و بخش بعد از آن
-                        let [beforeAt, afterAt] = trimmedLine.split('@');
-                        let [addressPort, rest] = afterAt.split('?');
-                        let [params, remark] = rest.split('#');
+                        // پیدا کردن شروع لینک اصلی
+                        let startIndex = line.indexOf('vless://');
+                        let config = line.substring(startIndex);
 
-                        // اعمال تغییرات: آدرس جدید و پورت 443
-                        let newAddressPort = `${newIp}:443`;
+                        // تفکیک بخش‌ها
+                        let [mainPart, remarkPart] = config.split('#');
+                        let [uuidPart, rest] = mainPart.split('@');
+                        let [addressPart, paramsPart] = rest.split('?');
+
+                        // تغییر آی‌پی و پورت
+                        let newAddress = `${newIp}:443`;
                         
-                        // ساخت نام جدید (ریموت کردن نام قدیمی)
-                        let updatedRemark = encodeURIComponent(`${newName} ${index + 1} ${flag}`);
+                        // ساخت نام جدید
+                        count++;
+                        let finalRemark = `${newName} ${count} ${flag}`;
 
-                        let newLine = `${beforeAt}@${newAddressPort}?${params}#${updatedRemark}`;
-                        modifiedLines.append ? null : modifiedLines.push(newLine);
+                        // سرهم کردن مجدد
+                        let newLine = `${uuidPart}@${newAddress}?${paramsPart}#${encodeURIComponent(finalRemark)}`;
+                        results.push(newLine);
                     } catch (err) {
-                        modifiedLines.push(trimmedLine);
+                        console.error("Error parsing line:", err);
                     }
-                } else if (trimmedLine !== "") {
-                    modifiedLines.push(trimmedLine);
                 }
             });
 
-            createDownloadLink(modifiedLines.join('\n'));
+            if (results.length > 0) {
+                showDownload(results.join('\n'));
+                status.innerHTML = `✅ تعداد ${results.length} کانفیگ WebSocket اصلاح شد.`;
+                status.className = "success";
+                status.style.display = "block";
+            } else {
+                alert("هیچ کانفیگ WebSocket در فایل پیدا نشد!");
+            }
         };
-
-        reader.readAsText(file);
+        reader.readAsText(fileInput.files[0]);
     }
 
-    function createDownloadLink(data) {
+    function showDownload(data) {
         const blob = new Blob([data], { type: 'text/plain' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.getElementById('downloadLink');
-        const section = document.getElementById('downloadSection');
-
-        link.href = url;
-        link.download = "Modified_Configs.txt";
-        section.style.display = 'block';
+        const url = URL.createObjectURL(blob);
+        const dlContainer = document.getElementById('dlContainer');
+        dlContainer.innerHTML = `<a href="${url}" download="Clean_Configs.txt" class="download-btn">📥 دانلود فایل (Clean_Configs.txt)</a>`;
     }
 </script>
 
