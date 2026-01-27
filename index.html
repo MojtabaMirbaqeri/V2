@@ -3,156 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V2Ray Bulk Editor</title>
+    <title>V2Ray Bulk Editor - Fixed</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Vazirmatn', sans-serif; scroll-behavior: smooth; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        body { font-family: 'Vazirmatn', sans-serif; }
+        .loader { border-top-color: #3498db; animation: spinner 1.5s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-[#0f172a] text-slate-200 min-h-screen p-4 md:p-8">
 
     <div class="max-w-4xl mx-auto">
         <div class="text-center mb-10">
-            <h1 class="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">
-                ویرایشگر دسته‌جمعی V2Ray
-            </h1>
-            <p class="text-slate-400">تغییر آدرس و پورت صدها کانفیگ در چند ثانیه</p>
+            <h1 class="text-3xl font-bold text-blue-400 mb-2">ویرایشگر هوشمند V2Ray</h1>
+            <p class="text-slate-400 text-sm">فایل را آپلود کنید یا متن را اینجا پیست کنید</p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            <div class="lg:col-span-1 space-y-6">
-                <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 backdrop-blur-sm">
-                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <span class="w-2 h-6 bg-blue-500 rounded-full"></span>
-                        تنظیمات جایگزینی
-                    </h2>
-                    
+            <div class="lg:col-span-1 space-y-4">
+                <div class="bg-slate-800/80 p-6 rounded-2xl border border-slate-700 shadow-xl">
+                    <h2 class="text-lg font-semibold mb-4 text-blue-300">۱. تنظیمات مقصد</h2>
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm text-slate-400 mb-1">آی‌پی یا هاست جدید:</label>
-                            <input type="text" id="newHost" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="1.2.3.4">
+                            <label class="block text-xs text-slate-400 mb-1">آی‌پی یا هاست جدید:</label>
+                            <input type="text" id="newHost" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-sm focus:border-blue-500 outline-none" placeholder="مثلاً 5.2.1.1">
                         </div>
                         <div>
-                            <label class="block text-sm text-slate-400 mb-1">پورت جدید:</label>
-                            <input type="number" id="newPort" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="443">
+                            <label class="block text-xs text-slate-400 mb-1">پورت جدید:</label>
+                            <input type="number" id="newPort" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-sm focus:border-blue-500 outline-none" placeholder="مثلاً 443">
                         </div>
-                        <button onclick="processBulk()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-blue-600/20">
-                            شروع پردازش
+                        <button onclick="processBulk()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-all">
+                            اعمال تغییرات روی همه
                         </button>
                     </div>
                 </div>
 
-                <div id="stats" class="hidden bg-emerald-900/20 p-4 rounded-2xl border border-emerald-500/30">
-                    <p class="text-sm text-emerald-400">تعداد پردازش موفق: <span id="successCount">0</span></p>
+                <div id="stats" class="hidden bg-blue-900/20 p-4 rounded-xl border border-blue-500/30 text-center">
+                    <span id="successCount" class="text-blue-400 font-bold text-xl">0</span>
+                    <span class="text-slate-400 text-sm mr-2">کانفیگ پردازش شد</span>
                 </div>
             </div>
 
             <div class="lg:col-span-2 space-y-6">
-                <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
-                    <div class="flex justify-between items-center mb-4">
-                        <label class="text-lg font-semibold">ورودی (Paste یا Upload)</label>
-                        <input type="file" id="fileInput" class="hidden" accept=".txt,.conf">
-                        <button onclick="document.getElementById('fileInput').click()" class="text-sm bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg transition-colors">
-                            انتخاب فایل
-                        </button>
+                <div class="bg-slate-800/80 p-6 rounded-2xl border border-slate-700 shadow-xl">
+                    <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
+                        <label class="text-sm font-bold">ورودی کانفیگ‌ها:</label>
+                        <div class="flex gap-2">
+                            <input type="file" id="fileInput" class="hidden" accept=".txt">
+                            <button onclick="document.getElementById('fileInput').click()" class="bg-slate-700 hover:bg-slate-600 text-xs px-4 py-2 rounded-lg transition-colors">
+                                📁 انتخاب فایل TXT
+                            </button>
+                            <button onclick="clearAll()" class="bg-red-900/30 hover:bg-red-900/50 text-red-400 text-xs px-4 py-2 rounded-lg transition-colors">
+                                پاکسازی
+                            </button>
+                        </div>
                     </div>
-                    <textarea id="bulkInput" rows="10" class="w-full bg-slate-900/80 border border-slate-600 rounded-xl p-4 text-xs font-mono custom-scrollbar focus:ring-1 focus:ring-slate-500 outline-none" placeholder="کانفیگ‌ها را اینجا پیست کنید... (هر کدام در یک خط)"></textarea>
+                    
+                    <div id="fileStatus" class="hidden mb-2 text-xs text-emerald-400 animate-pulse text-left" dir="ltr"></div>
+
+                    <textarea id="bulkInput" rows="10" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-[10px] font-mono focus:border-slate-500 outline-none resize-none" placeholder="کانفیگ‌ها را اینجا پیست کنید یا فایل را انتخاب کنید..."></textarea>
                 </div>
 
-                <div id="resultBox" class="hidden bg-slate-800/50 p-6 rounded-2xl border border-slate-700 animate-in fade-in duration-500">
+                <div id="resultBox" class="hidden bg-slate-800/80 p-6 rounded-2xl border border-emerald-500/30 shadow-2xl">
                     <div class="flex justify-between items-center mb-4">
-                        <label class="text-lg font-semibold text-emerald-400">خروجی نهایی</label>
-                        <button onclick="downloadAll()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2 rounded-xl font-bold transition-colors">
-                            دانلود فایل جدید
+                        <label class="text-sm font-bold text-emerald-400">خروجی اصلاح شده:</label>
+                        <button onclick="downloadAll()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2 rounded-lg font-bold text-sm shadow-lg shadow-emerald-900/40">
+                            📥 دانلود فایل جدید
                         </button>
                     </div>
-                    <textarea id="bulkOutput" rows="8" readonly class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-xs font-mono text-slate-400 custom-scrollbar outline-none"></textarea>
+                    <textarea id="bulkOutput" rows="8" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-[10px] font-mono text-slate-400 outline-none"></textarea>
                 </div>
             </div>
-
         </div>
     </div>
 
     <script>
-        // خواندن فایل در صورت آپلود
-        document.getElementById('fileInput').addEventListener('change', function(e) {
+        const fileInput = document.getElementById('fileInput');
+        const bulkInput = document.getElementById('bulkInput');
+        const fileStatus = document.getElementById('fileStatus');
+
+        // مدیریت آپلود فایل با دقت بالا
+        fileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
+
+            fileStatus.innerHTML = "در حال بارگذاری فایل: " + file.name + " ...";
+            fileStatus.classList.remove('hidden');
+
             const reader = new FileReader();
-            reader.onload = (e) => {
-                document.getElementById('bulkInput').value = e.target.result;
+            
+            reader.onload = function(event) {
+                const content = event.target.result;
+                if (content) {
+                    bulkInput.value = content;
+                    fileStatus.innerHTML = "✅ فایل با موفقیت بارگذاری شد: " + file.name;
+                    // ریست کردن مقدار برای انتخاب مجدد همان فایل در صورت نیاز
+                    fileInput.value = ''; 
+                } else {
+                    alert("فایل خالی است!");
+                }
             };
+
+            reader.onerror = function() {
+                alert("خطا در خواندن فایل!");
+            };
+
             reader.readAsText(file);
         });
 
-        function processBulk() {
-            const inputText = document.getElementById('bulkInput').value.trim();
-            const newHost = document.getElementById('newHost').value.trim();
-            const newPort = document.getElementById('newPort').value.trim();
+        function clearAll() {
+            bulkInput.value = '';
+            document.getElementById('bulkOutput').value = '';
+            document.getElementById('resultBox').classList.add('hidden');
+            document.getElementById('stats').classList.add('hidden');
+            fileStatus.classList.add('hidden');
+        }
 
-            if (!inputText || !newHost || !newPort) {
-                alert("لطفاً هم تنظیمات (Host/Port) و هم لیست کانفیگ‌ها را وارد کنید.");
+        function processBulk() {
+            const inputText = bulkInput.value.trim();
+            const host = document.getElementById('newHost').value.trim();
+            const port = document.getElementById('newPort').value.trim();
+
+            if (!inputText || !host || !port) {
+                alert("لطفاً اطلاعات هاست، پورت و لیست کانفیگ‌ها را وارد کنید.");
                 return;
             }
 
             const lines = inputText.split(/\r?\n/);
             let results = [];
-            let successCount = 0;
+            let count = 0;
 
             lines.forEach(line => {
-                const config = line.trim();
+                let config = line.trim();
                 if (!config) return;
 
                 try {
                     if (config.startsWith('vmess://')) {
-                        // VMESS Processing
-                        let base64Part = config.replace('vmess://', '');
+                        let base64Part = config.substring(8);
                         let jsonStr = atob(base64Part);
                         let jsonObj = JSON.parse(jsonStr);
-                        jsonObj.add = newHost;
-                        jsonObj.port = parseInt(newPort);
+                        jsonObj.add = host;
+                        jsonObj.port = parseInt(port);
                         results.push('vmess://' + btoa(JSON.stringify(jsonObj)));
-                        successCount++;
+                        count++;
                     } 
                     else if (config.startsWith('vless://') || config.startsWith('trojan://') || config.startsWith('ss://')) {
-                        // URI Based Processing
-                        // ساختار: protocol://uuid@host:port?params#name
-                        let protocol = config.split('://')[0];
-                        let remainder = config.split('://')[1];
+                        // استفاده از Regex برای دقت بالاتر در جداسازی پورت و آدرس
+                        // این الگو بخش پروتکل، UUID/Pass، و بقیه آدرس را جدا می‌کند
+                        let match = config.match(/^([^:]+:\/\/)([^@]+@)([^:?#]+)(:?\d*)(.*)$/);
                         
-                        let atIndex = remainder.indexOf('@');
-                        let partBeforeAt = remainder.substring(0, atIndex + 1);
-                        let partAfterAt = remainder.substring(atIndex + 1);
-                        
-                        // پیدا کردن جداکننده بعد از پورت (مثل ? یا # یا انتهای خط)
-                        let nextSeparatorIndex = partAfterAt.search(/[\?#]/);
-                        let addressSection = nextSeparatorIndex === -1 ? partAfterAt : partAfterAt.substring(0, nextSeparatorIndex);
-                        let paramsSection = nextSeparatorIndex === -1 ? "" : partAfterAt.substring(nextSeparatorIndex);
-                        
-                        // ساخت آدرس جدید
-                        let newAddressSection = `${newHost}:${newPort}`;
-                        results.push(`${protocol}://${partBeforeAt}${newAddressSection}${paramsSection}`);
-                        successCount++;
+                        if (match) {
+                            let [full, protocol, auth, oldHost, oldPort, rest] = match;
+                            results.push(`${protocol}${auth}${host}:${port}${rest}`);
+                            count++;
+                        } else {
+                            results.push(config);
+                        }
                     } else {
-                        results.push(config); // اگر فرمت ناشناس بود خود خط را برگردان
+                        results.push(config);
                     }
                 } catch (e) {
-                    console.error("خطا در پردازش خط:", line);
-                    results.push(config); // در صورت خطا اصل خط را نگه دار
+                    results.push(config);
                 }
             });
 
-            // نمایش نتایج
             document.getElementById('bulkOutput').value = results.join('\n');
             document.getElementById('resultBox').classList.remove('hidden');
             document.getElementById('stats').classList.remove('hidden');
-            document.getElementById('successCount').innerText = successCount;
+            document.getElementById('successCount').innerText = count;
             
-            // اسکرول به پایین برای دیدن نتیجه
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
@@ -161,13 +182,10 @@
             const blob = new Blob([content], { type: 'text/plain' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            const timestamp = new Date().getTime();
             a.href = url;
-            a.download = `configs_modified_${timestamp}.txt`;
-            document.body.appendChild(a);
+            a.download = 'modified_configs.txt';
             a.click();
             window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
         }
     </script>
 </body>
