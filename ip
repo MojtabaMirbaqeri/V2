@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>ویرایشگر دسته‌جمعی کانفیگ V2Ray</title>
+    <style>
+        body { font-family: Tahoma, sans-serif; background: #f4f7f6; padding: 20px; line-height: 1.6; }
+       .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; text-align: center; }
+        textarea { width: 100%; height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 15px; resize: vertical; }
+       .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #27ae60; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; width: 100%; font-size: 16px; }
+        button:hover { background: #219150; }
+       .footer { margin-top: 20px; font-size: 12px; color: #7f8c8d; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>تغییر آی‌پی و پورت کانفیگ‌های V2Ray</h2>
+    
+    <label>لیست کانفیگ‌ها را اینجا وارد کنید:</label>
+    <textarea id="inputConfigs" placeholder="vless://...&#10;vmess://...&#10;trojan://..."></textarea>
+
+    <div class="input-group">
+        <input type="text" id="newIp" placeholder="آی‌پی جدید (مثلاً: 188.114.97.3)">
+        <input type="number" id="newPort" placeholder="پورت جدید (مثلاً: 8443)">
+    </div>
+
+    <button onclick="modifyConfigs()">اعمال تغییرات و کپی در کلیپ‌بورد</button>
+
+    <label style="margin-top: 20px; display: block;">خروجی:</label>
+    <textarea id="outputConfigs" readonly placeholder="کانفیگ‌های اصلاح شده اینجا ظاهر می‌شوند..."></textarea>
+    
+    <div class="footer">
+        این ابزار فقط بخش Address و Port را تغییر می‌دهد و به سایر پارامترها دست نمی‌زند.
+    </div>
+</div>
+
+<script>
+    function modifyConfigs() {
+        const input = document.getElementById('inputConfigs').value;
+        const newIp = document.getElementById('newIp').value.trim();
+        const newPort = document.getElementById('newPort').value.trim();
+        
+        if (!newIp ||!newPort) {
+            alert("لطفاً آی‌پی و پورت جدید را وارد کنید.");
+            return;
+        }
+
+        const lines = input.split(/\r?\n/);
+        const modifiedLines = lines.map(line => {
+            line = line.trim();
+            if (!line) return "";
+
+            // هندل کردن VLESS و Trojan (ساختار URI)
+            if (line.startsWith("vless://") |
+
+| line.startsWith("trojan://")) {
+                try {
+                    // Regex برای جدا کردن بخش‌های لینک
+                    // $1: پروتکل، $2: اطلاعات قبل از آدرس، $3: آدرس فعلی، $4: پورت فعلی، $5: بقیه لینک
+                    const regex = /^(vless:\/\/|trojan:\/\/)([^@]+@)([^:]+):(\d+)(.*)$/;
+                    return line.replace(regex, `$1$2${newIp}:${newPort}$5`);
+                } catch (e) { return line; }
+            }
+
+            // هندل کردن VMess (ساختار Base64 JSON)
+            if (line.startsWith("vmess://")) {
+                try {
+                    const b64Part = line.replace("vmess://", "");
+                    const jsonStr = atob(b64Part);
+                    const config = JSON.parse(jsonStr);
+                    
+                    config.add = newIp;
+                    config.port = parseInt(newPort);
+                    
+                    return "vmess://" + btoa(JSON.stringify(config));
+                } catch (e) { return line; }
+            }
+
+            return line; // اگر فرمت ناشناخته بود
+        });
+
+        const finalResult = modifiedLines.filter(l => l!== "").join("\n");
+        document.getElementById('outputConfigs').value = finalResult;
+        
+        // کپی خودکار در کلیپ‌بورد
+        navigator.clipboard.writeText(finalResult);
+        alert("تغییرات اعمال و در کلیپ‌بورد کپی شد!");
+    }
+</script>
+
+</body>
+</html>
