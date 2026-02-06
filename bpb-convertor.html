@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPB to V2Ray Converter</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #1a1a1a;
+            --accent: #000000;
+            --border: #e1e1e1;
+            --secondary: #f4f4f4;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        header {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            font-weight: 800;
+            font-size: 2.5rem;
+            letter-spacing: -1px;
+            margin-bottom: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: monospace;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        textarea {
+            height: 200px;
+            resize: vertical;
+        }
+
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .result-area {
+            margin-top: 40px;
+        }
+
+        .config-card {
+            background: var(--secondary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            position: relative;
+            border: 1px solid var(--border);
+        }
+
+        .config-card code {
+            display: block;
+            word-break: break-all;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            padding-right: 10px;
+        }
+
+        .copy-btn {
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            width: auto;
+            display: inline-block;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .status {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            color: #666;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 30px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>BPB Converter</h1>
+        <p>تبدیل ساب‌لینک و JSON به لینک‌های استاندارد V2Ray</p>
+    </header>
+
+    <div class="input-group">
+        <label>لینک ساب‌لینک (Fetch)</label>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="subUrl" placeholder="https://example.com/sub/...">
+            <button id="fetchBtn" style="width: 120px;">دریافت</button>
+        </div>
+        <p class="status">توجه: برای دریافت مستقیم از URL، مرورگر باید اجازه CORS بدهد.</p>
+    </div>
+
+    <div class="input-group">
+        <label>یا متن JSON را اینجا وارد کنید</label>
+        <textarea id="jsonInput" placeholder='[ { "remarks": "...", "outbounds": [...] }, ... ]'></textarea>
+    </div>
+
+    <button id="convertBtn">تبدیل به VLESS</button>
+
+    <div class="result-area" id="resultArea">
+        </div>
+</div>
+
+<script>
+    const convertBtn = document.getElementById('convertBtn');
+    const fetchBtn = document.getElementById('fetchBtn');
+    const jsonInput = document.getElementById('jsonInput');
+    const subUrlInput = document.getElementById('subUrl');
+    const resultArea = document.getElementById('resultArea');
+
+    // تابع اصلی تبدیل
+    function convertToVless(json) {
+        try {
+            const data = JSON.parse(json);
+            const configs = Array.isArray(data) ? data : [data];
+            let results = [];
+
+            configs.forEach(item => {
+                // پیدا کردن اوتباند اصلی (معمولاً اولین پروتکل vless)
+                const outbound = item.outbounds?.find(o => o.protocol === 'vless');
+                
+                if (outbound) {
+                    const vnext = outbound.settings.vnext[0];
+                    const user = vnext.users[0];
+                    const stream = outbound.streamSettings;
+                    
+                    const uuid = user.id;
+                    const address = vnext.address;
+                    const port = vnext.port;
+                    const remarks = encodeURIComponent(item.remarks || 'BPB-Config');
+                    
+                    // پارامترهای اصلی
+                    let params = new URLSearchParams({
+                        encryption: user.encryption || 'none',
+                        security: stream.security || 'none',
+                        type: stream.network || 'tcp'
+                    });
+
+                    // تنظیمات WebSocket
+                    if (stream.network === 'ws') {
+                        if (stream.wsSettings?.host) params.set('host', stream.wsSettings.host);
+                        if (stream.wsSettings?.path) params.set('path', stream.wsSettings.path);
+                    }
+
+                    // تنظیمات TLS
+                    if (stream.security === 'tls') {
+                        if (stream.tlsSettings?.serverName) params.set('sni', stream.tlsSettings.serverName);
+                        if (stream.tlsSettings?.fingerprint) params.set('fp', stream.tlsSettings.fingerprint);
+                        if (stream.tlsSettings?.alpn) params.set('alpn', stream.tlsSettings.alpn.join(','));
+                    }
+
+                    const vlessLink = `vless://${uuid}@${address}:${port}?${params.toString()}#${remarks}`;
+                    results.push(vlessLink);
+                }
+            });
+
+            renderResults(results);
+        } catch (e) {
+            alert('خطا در پردازش JSON: ' + e.message);
+        }
+    }
+
+    function renderResults(links) {
+        resultArea.innerHTML = `<h3>نتایج (${links.length})</h3>`;
+        if (links.length === 0) {
+            resultArea.innerHTML += '<p>هیچ کانفیگ معتبری پیدا نشد.</p>';
+            return;
+        }
+
+        links.forEach(link => {
+            const card = document.createElement('div');
+            card.className = 'config-card';
+            card.innerHTML = `
+                <code>${link}</code>
+                <button class="copy-btn" onclick="copyToClipboard('${link}', this)">کپی لینک</button>
+            `;
+            resultArea.appendChild(card);
+        });
+    }
+
+    async function fetchSub() {
+        const url = subUrlInput.value.trim();
+        if (!url) return;
+        
+        fetchBtn.innerText = 'در حال دریافت...';
+        try {
+            const response = await fetch(url);
+            const text = await response.text();
+            jsonInput.value = text;
+            convertToVless(text);
+        } catch (e) {
+            alert('خطا در دریافت! احتمالاً به دلیل محدودیت CORS مرورگر است. متن را دستی کپی کنید.');
+        } finally {
+            fetchBtn.innerText = 'دریافت';
+        }
+    }
+
+    function copyToClipboard(text, btn) {
+        navigator.clipboard.writeText(text).then(() => {
+            const originalText = btn.innerText;
+            btn.innerText = 'کپی شد!';
+            setTimeout(() => btn.innerText = originalText, 2000);
+        });
+    }
+
+    convertBtn.addEventListener('click', () => convertToVless(jsonInput.value));
+    fetchBtn.addEventListener('click', fetchSub);
+</script>
+
+</body>
+</html>
